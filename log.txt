@@ -1,0 +1,378 @@
+--------------
+SET FOREIGN_KEY_CHECKS = 0
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+SET @tables = NULL
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+SELECT GROUP_CONCAT(table_name) INTO @tables
+  FROM information_schema.tables
+  WHERE table_schema = 'csc371-30'
+--------------
+
+Query OK, 1 row affected (0.00 sec)
+
+--------------
+SET @tables = CONCAT('DROP TABLE IF EXISTS ', @tables)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+PREPARE stmt FROM @tables
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+Statement prepared
+
+--------------
+EXECUTE stmt
+--------------
+
+Query OK, 0 rows affected (0.07 sec)
+
+--------------
+DEALLOCATE PREPARE stmt
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+SET FOREIGN_KEY_CHECKS = 1
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+CREATE TABLE Players (
+    playerID INT NOT NULL AUTO_INCREMENT,
+	playerName VARCHAR(255) NOT NULL,
+	class VARCHAR(255),
+	experiencePoints INT,
+	strength INT,
+	charisma INT,
+	intelligence INT,
+	currentHealth INT,
+	maxHealth INT,
+	PRIMARY KEY (playerID)
+)
+--------------
+
+Query OK, 0 rows affected (0.04 sec)
+
+--------------
+CREATE TABLE Logins (
+	loginID INT NOT NULL AUTO_INCREMENT,
+	playerID INT NOT NULL,
+	loginTime DATETIME NOT NULL,
+	logoutTime DATETIME,
+	PRIMARY KEY (loginID),
+	FOREIGN KEY (playerID) REFERENCES Players(playerID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Maps (
+	mapName VARCHAR(255) NOT NULL,
+	region VARCHAR(255) NOT NULL,
+	PRIMARY KEY (mapName, region)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE KnownMaps (
+	playerID INT NOT NULL,
+	mapName VARCHAR(255) NOT NULL,
+	CONSTRAINT PK_Maps PRIMARY KEY (playerID, mapName),
+	FOREIGN KEY (playerID) REFERENCES Players(playerID),
+	FOREIGN KEY (mapName) REFERENCES Maps(mapName)
+)
+--------------
+
+Query OK, 0 rows affected (0.04 sec)
+
+--------------
+CREATE TABLE StatusEffects (
+	statusName VARCHAR(255) NOT NULL,
+	timeout INT NOT NULL,
+	strength INT,
+	charisma INT,
+	intelligence INT,
+	PRIMARY KEY (statusName)
+)
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+CREATE TABLE PlayerStatus (
+	playerID INT NOT NULL,
+	statusName VARCHAR(255) NOT NULL,
+	timeApplied DATETIME NOT NULL,
+	status VARCHAR(255) NOT NULL,
+	CONSTRAINT PK_PStatus PRIMARY KEY (playerID, statusName),
+	FOREIGN KEY (playerID) REFERENCES Players(playerID),
+	FOREIGN KEY (statusName) REFERENCES StatusEffects(statusName)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Deaths (
+	deathID INT NOT NULL AUTO_INCREMENT,
+	causeOfDeath VARCHAR(255) NOT NULL,
+	timeOfDeath DATETIME NOT NULL,
+	PRIMARY KEY (deathID) 
+)
+--------------
+
+Query OK, 0 rows affected (0.03 sec)
+
+--------------
+CREATE TABLE PlayerDeaths (
+	playerID INT NOT NULL,
+	deathID INT NOT NULL,
+	CONSTRAINT PK_PDeaths PRIMARY KEY (playerID, deathID),
+	FOREIGN KEY (playerID) REFERENCES Players(playerID),
+	FOREIGN KEY (deathID) REFERENCES Deaths(deathID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Creatures (
+	creatureID INT NOT NULL AUTO_INCREMENT,
+	species VARCHAR(255) NOT NULL,
+	maxHealth INT,
+	Friendliness VARCHAR(255),
+	CONSTRAINT Friend_Val CHECK  (Friendliness = 'aggressive' OR Friendliness = 'neutral' OR Friendliness = 'passive' ),
+	PRIMARY KEY (creatureID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE CreaturesOwned (
+	playerID INT NOT NULL,
+	creatureID INT NOT NULL,
+	CONSTRAINT PK_POwns PRIMARY KEY (playerID, creatureID),
+	FOREIGN KEY (playerID) REFERENCES Players(playerID),
+	FOREIGN KEY (creatureID) REFERENCES Creatures(creatureID)
+)
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+CREATE TABLE Pets (
+	petID INT NOT NULL,
+	loyalty VARCHAR(255),
+	CONSTRAINT loyalty_Val CHECK  (loyalty = 'disloyal' OR loyalty = 'neutral' OR loyalty = 'loyal' OR loyalty = 'very_loyal'),
+	FOREIGN KEY (petID) REFERENCES Creatures(creatureID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE NPCs (
+	npcID INT NOT NULL,
+	npcName VARCHAR(255) NOT NULL,
+	class VARCHAR(255),
+	PRIMARY KEY (npcID),
+	FOREIGN KEY (npcID) REFERENCES Creatures(creatureID)
+
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Summons (
+	summonID INT NOT NULL,
+	creatureName VARCHAR(255) NOT NULL,
+	duration INT NOT NULL,
+	PRIMARY KEY (summonID),
+	FOREIGN KEY (summonID) REFERENCES Creatures(creatureID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Monsters (
+	monsterID INT NOT NULL,
+	attackValue INT NOT NULL,
+	PRIMARY KEY (monsterID),
+	FOREIGN KEY (monsterID) REFERENCES Creatures(creatureID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Skills (
+	skillName VARCHAR(255) NOT NULL,
+	maxLevel INT NOT NULL,
+	PRIMARY KEY (skillName)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE PlayerSkills (
+	playerID INT NOT NULL,
+	skillName VARCHAR(255) NOT NULL,
+	playerSkillLevel INT,
+	CONSTRAINT PK_PSkills PRIMARY KEY (playerID, skillName)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE  Items (
+	itemID INT NOT NULL AUTO_INCREMENT,
+	itemName VARCHAR(255) NOT NULL,
+	weight INT,
+	cost INT,
+	CONSTRAINT PK_items PRIMARY KEY (itemID, itemName)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE Equiptment (
+	itemID INT NOT NULL,
+	armorValue INT,
+	damageValue INT,
+	FOREIGN KEY (itemID) REFERENCES Items(itemID)
+)
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+CREATE TABLE PlayerInventory (
+	playerID INT NOT NULL,
+	itemID INT NOT NULL,
+	CONSTRAINT PK_PItems PRIMARY KEY (playerID, itemID),
+	FOREIGN KEY (playerID) REFERENCES Players(playerID),
+	FOREIGN KEY (itemID) REFERENCES Items(itemID)
+)
+--------------
+
+Query OK, 0 rows affected (0.03 sec)
+
+--------------
+CREATE TABLE Recipes (
+	recipeID INT NOT NULL,
+	craftedItemID INT NOT NULL,
+	quantityMade INT NOT NULL,
+	PRIMARY KEY (recipeID),
+	FOREIGN KEY (craftedItemID) REFERENCES Items(itemID)
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+CREATE TABLE CraftingMaterials (
+	recipeID INT NOT NULL,
+	craftingMaterialID INT NOT NULL,
+	CONSTRAINT PK_Craft_Mats PRIMARY KEY (recipeID, craftingMaterialID),
+	FOREIGN KEY (recipeID) REFERENCES Recipes(recipeID),
+	FOREIGN KEY (craftingMaterialID) REFERENCES Items(itemID)
+
+)
+--------------
+
+Query OK, 0 rows affected (0.09 sec)
+
+Bye
+--------------
+INSERT INTO Players 
+    (playerName, class, experiencePoints, strength, charisma, intelligence, currentHealth, maxHealth) 
+VALUES 
+    ("Torbjorn", "dwarf mechanic",      FLOOR(RAND() * 250), FLOOR(RAND() * 300), FLOOR(RAND() * 100), FLOOR(RAND() * 190), FLOOR(RAND() * 100), 100),
+    ("Vlad", "elf vampire",             FLOOR(RAND() * 250), FLOOR(RAND() * 300), FLOOR(RAND() * 100), FLOOR(RAND() * 190), FLOOR(RAND() * 100), 100),
+    ("Brittany", "human cheerleader",   FLOOR(RAND() * 250), FLOOR(RAND() * 300), FLOOR(RAND() * 100), FLOOR(RAND() * 190), FLOOR(RAND() * 100), 100),
+    ("Treeguy", "ent",                  FLOOR(RAND() * 250), FLOOR(RAND() * 300), FLOOR(RAND() * 100), FLOOR(RAND() * 190), FLOOR(RAND() * 100), 450),
+    ("Harry Potter", "human wizard",    FLOOR(RAND() * 250), FLOOR(RAND() * 300), FLOOR(RAND() * 100), FLOOR(RAND() * 190), FLOOR(RAND() * 100), 190),
+    ("Uuuuurk", "ork berserker",        FLOOR(RAND() * 250), FLOOR(RAND() * 300), FLOOR(RAND() * 100), FLOOR(RAND() * 190), FLOOR(RAND() * 100), 650)
+--------------
+
+Query OK, 6 rows affected (0.00 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+--------------
+INSERT INTO Logins 
+    (playerID, loginTime, logoutTime) 
+VALUES
+    (1, '2017-01-29 11:23:05', '2017-02-01 13:52:57'),
+    (2, '2016-11-25 11:23:05', '2017-02-10 13:52:57'),
+    (3, '2017-01-12 11:23:05', '2017-02-07 13:52:57'),
+    (4, '2017-01-17 11:23:05', '2017-02-09 13:52:57'),
+    (5, '2017-02-05 11:23:05', '2017-02-23 13:52:57'),
+    (6, '2016-10-09 11:23:05', '2017-02-12 13:52:57')
+--------------
+
+Query OK, 6 rows affected (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+--------------
+INSERT INTO Maps
+    (mapName, region)
+VALUES
+    ("Magic treasure burried here", "Cambrodia"),
+    ("Known Troll-caves", "Middle-Earthen Curutiba"),
+    ("The safe path", "The Enchanted Forest"),
+    ("Known Covens", "Old Englang"),
+    ("The kingdom under the mountain", "The far reaches")
+--------------
+
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+--------------
+INSERT INTO KnownMaps
+    (playerID, mapName)
+VALUES
+    (1, "The safe path"),
+    (1, "Known Covens"),
+    (1, "The kingdom under the mountain"),
+    (2, "The safe path"),
+    (2, "Known Covens"),
+    (2, "The kingdom under the mountain"),
+    (3, "Magic treasure burried here"),
+    (3, "Known Troll-caves"),
+    (3, "Known Covens"),
+    (4, "Magic treasure burried here"),
+    (4, "Known Troll-caves"),
+    (4, "The safe path"),
+    (5, "The safe path"),
+    (5, "Known Covens"),
+    (6, "The safe path"),
+    (6, "Known Covens"),
+    (6, "The kingdom under the mountain")
+--------------
+
+Query OK, 17 rows affected (0.04 sec)
+Records: 17  Duplicates: 0  Warnings: 0
+
+Bye
