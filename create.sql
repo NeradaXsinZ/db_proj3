@@ -2,7 +2,6 @@
 	-- mysql --host=db.cs.ship.edu --user=csc371-30 --password=Password30 --database=csc371-30 -vvv < MMO_CREATE.sql
 	-- remove -vvv if you don't want verbose
 
-
 -- Drops all tables
 -- Found this part on stackoverflow though im sure i could have come up with something similar given time
 -- http://stackoverflow.com/questions/12403662/how-to-remove-all-mysql-tables-from-the-command-line-without-drop-database-permi
@@ -37,9 +36,9 @@ CREATE TABLE Players (
 );
 
 CREATE TABLE Logins (
-	loginID INT NOT NULL,
+	loginID INT NOT NULL AUTO_INCREMENT,
 	playerID INT NOT NULL,
-	logInTime DATETIME NOT NULL,
+	loginTime DATETIME NOT NULL,
 	logoutTime DATETIME,
 	PRIMARY KEY (loginID),
 	FOREIGN KEY (playerID) REFERENCES Players(playerID)
@@ -59,7 +58,6 @@ CREATE TABLE KnownMaps (
 	FOREIGN KEY (mapName) REFERENCES Maps(mapName)
 );
  
-
 CREATE TABLE StatusEffects (
 	statusName VARCHAR(255) NOT NULL,
 	timeout INT NOT NULL,
